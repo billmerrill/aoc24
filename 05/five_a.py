@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 def load_config(src):
 
     with open(src, 'r') as fh:
@@ -38,9 +39,6 @@ def fix_order(order, rules):
                     break
 
     return int(order[len(order) // 2])
-
-
-
 
 def validate_and_count(config):
     valid_sum = 0
