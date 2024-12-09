@@ -1,11 +1,14 @@
 import itertools, operator, copy
 
+def my_conc(a,b):
+    return int(f'{a}{b}')
+
 def sum_goodies(config):
     grand_total = 0
     for c in config:
         print(c)
         numo = len(c['operands'])-1
-        for attempt in itertools.product([operator.add, operator.mul], repeat=numo):
+        for attempt in itertools.product([operator.add, operator.mul, my_conc], repeat=numo):
             nums = copy.copy(c['operands'])
             sum = nums.pop(0)
             for op in attempt:
