@@ -1,23 +1,6 @@
 import numpy as np
 from collections import defaultdict
 
-def possible_antinodes(ant_map):
-    ants, counts = np.unique(ant_map, return_counts=True)
-    ant_total = 0
-    for i, ant in enumerate(ants):
-        if ant != '.':
-            ant_total += counts[i] * 2
-
-    print(f'unbounded total {ant_total}')
-
-def bounded_antinodes(ant_map):
-    ants = defaultdict(list)
-    with np.nditer(ant_map, flags=['multi_index']) as it:
-        for x in it:
-            if x.item() != '.':
-                ants[x.item].append(it.multi_index)
-    print(ants)
-
 def main():
     src = 'sample.txt'
     src = 'input.txt'
