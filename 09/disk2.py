@@ -30,18 +30,11 @@ def expand_disk(disk):
 
 
 def defrag(disk):
-    # print(disk)
     space_ptr = 0
     file_ptr = len(disk) -1
-    # while isinstance(disk[space_ptr][0], int):
-    #     space_ptr += 1
-    # while disk[file_ptr][0] == '.':
-    #     file_ptr -= 1
 
-    # while file_ptr > 0:
     file_ptr = len(disk)-1
     while file_ptr >= 0:
-    # for file_ptr in range(len(disk)-1, 0, -1):
         if disk[file_ptr][0] == '.':
             file_ptr -= 1
             continue
@@ -66,9 +59,6 @@ def defrag(disk):
 
         file_ptr -= 1
         
-        # while disk[file_ptr][0] == '.':
-        #     file_ptr -= 1
-
     return disk
 
 def checksum_disk(disk):
@@ -84,7 +74,6 @@ def main():
     sample_disk_map = '2333133121414131402'
     with open('input.txt', 'r') as fh:
         input_disk_map = fh.readline().strip()
-    # print(input_disk_map)
     disk = gen_disk(input_disk_map)
     # disk = gen_disk(sample_disk_map)
     print(disk)
