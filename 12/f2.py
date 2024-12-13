@@ -39,13 +39,6 @@ class Neighbors:
                     peri += n_peri
         return area, peri                
 
-
-    def walk_area(self, root):
-        area = 1
-        f
-        area += walk_neigbors(root)
-
-
     def compute_areas(self):
         self.notes = {}
         self.areas = {}
@@ -61,28 +54,63 @@ class Neighbors:
 
         # print(self.areas)
 
-    def is_root(self, i,j,root):
-        result = [[False]*3]*3
+    def edge_filter(self, i,j,plant):
+        filter = [[False]*3 for q in range(3)]
         for x_i, x in enumerate(range(i-1,i+2)):
             for y_i, y in enumerate(range(j-1,j+2)):
-                result[x_i][y_i] = self.garden[x,y].item() == self.garden[root[0],root[1]].item()
-        return result
+                if 0 <= x < self.garden.shape[0] and 0 <= y < self.garden.shape[1]:
+                    filter[x_i][y_i] = (self.garden[x,y].item() == plant)
+                else:
+                    pass # it's not plant or oob.. false
+
+        return filter
+
+    def count_sides(self, i, j, f):
+        # lhs
+        sides = 0
+        if (not f[0][1] and not f[1][0]) or \
+            (f[0][0] and f[0][1] and not f[1][0]):
+            sides += 1
+            pass
+
+        # top
+        if (not (f[0][1] or f[1][0])) or \
+            (f[0][0] and f[1][0] and not f[0][1]):
+            sides += 1
+            pass
+
+        # rhs
+        if (not(f[0][1] or f[1][2])) or \
+            (f[0][2] and not f[1][2]):
+            sides += 1
+            pass
+
+        # bottom
+        if (not(f[1][0] or f[2][1])) or \
+            (f[1][0] and f[2][0] and not f[2][1]):
+            sides += 1
+            pass
+        return sides
 
     def compute_sides(self):
-        for area in self.areas.keys():
-            a = self.areas[area][0]
+        for area_head in self.areas.keys():
             sides = 0
-            prev_row_start = -1
-            while a > 0:
-                for i in range(self.garden.shape[0]):
-                    for j in range(self.garden.shape[1]):
-                        root = self.notes[area]['root']
-                        root_str = f'{root[0],root[1]}'
-                        # if self.notes[area]['root'] == list(area):
-                        if root_str == area:
-                            filter = self.is_root(i,j,area)
-                            print(area,filter)
+            print('computing sides for ', area_head, self.notes[area_head]['plant'])
+            area_counter = self.areas[area_head][0]
+            for i in range(self.garden.shape[0]):
+                for j in range(self.garden.shape[1]):
+                    it_root = self.notes[(i,j)]['root']
+                    if it_root  == self.notes[area_head]['root']:
+                        area_counter -= 1
+                        filter = self.edge_filter(i,j,self.garden[i,j].item())
+                        sides += self.count_sides(i,j,filter)
+                        if area_counter < 0:
+                            break
 
+                if area_counter < 0:
+                    break
+            self.notes[area_head]['sides'] = sides
+            print(area_head, sides)
 
     def compute_cost(self):
         cost = 0
@@ -90,16 +118,23 @@ class Neighbors:
             cost += self.areas[p][0] * self.areas[p][1]
         return cost
 
+    def compute_bulk_cost(self):
+        cost = 0
+        for p in self.areas:
+            cost += self.areas[p][0] * self.notes[p]['sides']
+        return cost
+
 def main():
-    src = 'sample1.txt'
-    # src = 'input.txt'
+    src = 'sample3.txt'
+    src = 'input.txt'
     with open(src, 'r') as f:
         lines = [line.strip() for line in f.readlines()]
     garden = np.array([list(line) for line in lines])
     n = Neighbors(garden)
     n.compute_edges()
     n.compute_areas()
-    # n.compute_sides()
+    n.compute_sides()
     print('cost: ', n.compute_cost())
+    print('bulk cost: ', n.compute_bulk_cost())
 
 main()
