@@ -20,7 +20,23 @@ class Warehouse:
         print("Initial State")
         self.pretty_print()
 
-    def process_path(self, path):
+    def shove(self, path):
+        # pathstr = ''.join(path)
+        offset = 0
+        for i,v in enumerate(path):
+            if v == 'O':
+                continue
+            if v == '.':
+                path[0] = '.'
+                path[1] = '@'
+                path[i] = 'O'
+                offset = 1
+                break
+            if v == '#':
+                break
+        return offset, path
+
+    def process_path_thru(self, path):
         #  @.O.OO.#
         new_robot_offset = -1
         new_path = []
@@ -77,25 +93,29 @@ class Warehouse:
                 # up 
             cur = self.robot
             if inst == '^':
-                new_robot_offset, path = self.process_path(self.map[self.robot[0]::-1, self.robot[1]])
+                # new_robot_offset, path = self.process_path(self.map[self.robot[0]::-1, self.robot[1]])
+                new_robot_offset, path = self.shove(self.map[self.robot[0]::-1, self.robot[1]])
                 for cell in path:
                     self.map[cur[0], cur[1]] = cell
                     cur = (cur[0]-1, cur[1])
                 self.robot = (self.robot[0] - new_robot_offset, self.robot[1])
             elif inst == '>':
-                new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]:])
+                # new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]:])
+                new_robot_offset, path = self.shove(self.map[self.robot[0], self.robot[1]:])
                 for cell in path:
                     self.map[cur[0], cur[1]] = cell
                     cur = (cur[0], cur[1]+1)
                 self.robot = (self.robot[0], self.robot[1] + new_robot_offset)
             elif inst == 'v':
-                new_robot_offset, path = self.process_path(self.map[self.robot[0]:, self.robot[1]])
+                # new_robot_offset, path = self.process_path(self.map[self.robot[0]:, self.robot[1]])
+                new_robot_offset, path = self.shove(self.map[self.robot[0]:, self.robot[1]])
                 for cell in path:
                     self.map[cur[0], cur[1]] = cell
                     cur = (cur[0]+1, cur[1])
                 self.robot = (self.robot[0] + new_robot_offset, self.robot[1])
             elif inst == '<':
-                new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]::-1])
+                # new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]::-1])
+                new_robot_offset, path = self.shove(self.map[self.robot[0], self.robot[1]::-1])
                 for cell in path:
                     self.map[cur[0], cur[1]] = cell
                     cur = (cur[0], cur[1]-1)
@@ -114,10 +134,10 @@ class Warehouse:
 
 def main():
     src = 'small_sample.txt'
-    src = 'sample.txt'
+    # src = 'sample.txt'
     # src = 'test.txt'
     src = 'input.txt'
-    src = 'center.txt'
+    # src = 'center.txt'
     instructions = []
     with open(src, 'r') as f:
         lines = [line.strip() for line in f.readlines()]
