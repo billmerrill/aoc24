@@ -30,6 +30,10 @@ class Warehouse:
     def load(self, wh, inst):
         self.instructions = list(inst)
         self.map = self.wide(wh)
+        # print("TESTING")
+        # self.map[2,5] = '['
+        # self.map[2,6] = ']'
+        # self.map[1,5] = '#'
         self.robot = None
         with np.nditer(self.map, flags=['multi_index']) as it:
             for x in it:
@@ -86,6 +90,42 @@ class Warehouse:
         return new_robot_offset, new_path
     
 
+    def box_moved(self, bl, br, dir):
+        bl_moved = False
+        br_moved = False
+        bl_next = (bl[0]+dir[0], bl[1]+dir[1])
+        br_next = (br[0]+dir[0], br[1]+dir[1])
+        bl_next_val = self.map[bl_next[0], bl_next[1]]
+        br_next_val = self.map[br_next[0], br_next[1]]
+    
+        if bl_next_val == '.':
+            bl_moved = True
+        if bl_next_val == '#':
+            bl_moved = False
+
+        if br_next_val == '.':
+            br_moved = True
+        if br_next_val == '#':
+            br_moved = False
+
+        if bl_next_val == '[' and br_next_val == ']':
+            bl_moved = br_moved = self.box_moved(bl_next, br_next, dir)
+        elif bl_next_val == ']':
+            bl_moved = self.box_moved((bl_next[0], bl_next[1]-1), bl_next, dir)
+        elif br_next_val == '[':
+            br_moved = self.box_moved(br_next, (br_next[0], br_next[1]+1), dir)
+        
+        if br_moved and bl_moved:
+            self.map[bl_next[0], bl_next[1]] = self.map[bl[0], bl[1]]
+            self.map[br_next[0], br_next[1]] = self.map[br[0], br[1]]
+            self.map[bl[0], bl[1]] = '.'
+            self.map[br[0], br[1]] = '.'
+            return True
+        
+        return False
+
+
+
     def run_robot(self):
         for inst in self.instructions:
             if inst == '^':
@@ -97,6 +137,8 @@ class Warehouse:
             elif inst == '<':
                 next = (self.robot[0], self.robot[1]-1)
 
+               
+            cur = self.robot
             if self.map[next[0], next[1]] == '#':
                 print("instruction", inst)        
                 self.pretty_print()
@@ -108,24 +150,55 @@ class Warehouse:
                 print("instruction", inst)        
                 self.pretty_print()
                 continue
-                
-                # up 
-            cur = self.robot
-            if inst == '^':
+
+            #it's a box
+            if inst == '^' or inst == 'v':
+                if inst == '^':
+                    dir = (-1,0)
+                else:
+                    dir = (1,0)
+
+                if self.map[next[0],next[1]] == '[':
+                    box_l = next
+                    box_r = (next[0], next[1]+1)
+                else:
+                    box_l = (next[0], next[1]-1)
+                    box_r = next
+
+                if self.box_moved(box_l, box_r, dir):
+                    self.map[next[0], next[1]] = '@'
+                    self.map[cur[0], cur[1]] = '.'
+                    self.robot = next
+
+                # move the box above and its other half.
+
+
+                # can box-l and box-r move?
+                #     can box-l
+
+                # start box = box-l, box-
+
+                # box can move box-l, box-r
+                # if box-l can move and box-r can move 
+                    
+
                 # new_robot_offset, path = self.process_path(self.map[self.robot[0]::-1, self.robot[1]])
-                new_robot_offset, path = self.shove(self.map[self.robot[0]::-1, self.robot[1]])
-                for cell in path:
-                    self.map[cur[0], cur[1]] = cell
-                    cur = (cur[0]-1, cur[1])
-                self.robot = (self.robot[0] - new_robot_offset, self.robot[1])
+                # new_robot_offset, path = self.shove(self.map[self.robot[0]::-1, self.robot[1]])
+                # for cell in path:
+                #     self.map[cur[0], cur[1]] = cell
+                #     cur = (cur[0]-1, cur[1])
+                # self.robot = (self.robot[0] - new_robot_offset, self.robot[1])
             elif inst == '>':
+                # pushing into wide boxes >[].
+
+
                 # new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]:])
-                new_robot_offset, path = self.shove(self.map[self.robot[0], self.robot[1]:])
-                for cell in path:
-                    self.map[cur[0], cur[1]] = cell
-                    cur = (cur[0], cur[1]+1)
-                self.robot = (self.robot[0], self.robot[1] + new_robot_offset)
-            elif inst == 'v':
+            #     new_robot_offset, path = self.shove(self.map[self.robot[0], self.robot[1]:])
+            #     for cell in path:
+            #         self.map[cur[0], cur[1]] = cell
+            #         cur = (cur[0], cur[1]+1)
+            #     self.robot = (self.robot[0], self.robot[1] + new_robot_offset)
+            # elif inst == 'v':
                 # new_robot_offset, path = self.process_path(self.map[self.robot[0]:, self.robot[1]])
                 new_robot_offset, path = self.shove(self.map[self.robot[0]:, self.robot[1]])
                 for cell in path:
@@ -152,11 +225,11 @@ class Warehouse:
         return score
 
 def main():
-    src = 'small_sample.txt'
+    # src = 'small_sample.txt'
     # src = 'sample.txt'
-    src = 'test.txt'
+    # src = 'test.txt'
     # src = 'input.txt'
-    # src = 'center.txt'
+    src = 'center.txt'
     instructions = []
     with open(src, 'r') as f:
         lines = [line.strip() for line in f.readlines()]
