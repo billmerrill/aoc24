@@ -31,7 +31,7 @@ class Warehouse:
         self.instructions = list(inst)
         self.map = self.wide(wh)
         # print("TESTING")
-        # self.map[2,5] = '['
+        # self.map[2,6] = '#'
         # self.map[2,6] = ']'
         # self.map[1,5] = '#'
         self.robot = None
@@ -42,22 +42,6 @@ class Warehouse:
                     break
         print("Initial State")
         self.pretty_print()
-
-    def shove(self, path):
-        # pathstr = ''.join(path)
-        offset = 0
-        for i,v in enumerate(path):
-            if v == 'O':
-                continue
-            if v == '.':
-                path[0] = '.'
-                path[1] = '@'
-                path[i] = 'O'
-                offset = 1
-                break
-            if v == '#':
-                break
-        return offset, path
 
     def process_path_thru(self, path):
         #  @.O.OO.#
@@ -107,13 +91,39 @@ class Warehouse:
             br_moved = True
         if br_next_val == '#':
             br_moved = False
+        '''
+        instruction >
+        ####################
+        ##[]..[]......[][]##
+        ##[]...........[].##
+        ##............[][]##
+        ##..............[]##
+        ##..##[]..[][]....##
+        ##...[]..[][].....##
+        ##.....[][].@.[][]##
+        ##.......[]...[]..##
+        ####################
+        instruction ^
+        ####################
+        ##[]..[]......[][]##
+        ##[]...........[].##
+        ##............[][]##
+        ##........[]....[]##
+        ##..##[]....[]....##
+        ##...[]..[][].....##
+        ##.....[][].@.[][]##
+        ##.......[]...[]..##
+        ####################
+        '''
+
 
         if bl_next_val == '[' and br_next_val == ']':
             bl_moved = br_moved = self.box_moved(bl_next, br_next, dir)
-        elif bl_next_val == ']':
-            bl_moved = self.box_moved((bl_next[0], bl_next[1]-1), bl_next, dir)
-        elif br_next_val == '[':
-            br_moved = self.box_moved(br_next, (br_next[0], br_next[1]+1), dir)
+        else:
+            if bl_next_val == ']':
+                bl_moved = self.box_moved((bl_next[0], bl_next[1]-1), bl_next, dir)
+            if br_next_val == '[':
+                br_moved = self.box_moved(br_next, (br_next[0], br_next[1]+1), dir)
         
         if br_moved and bl_moved:
             self.map[bl_next[0], bl_next[1]] = self.map[bl[0], bl[1]]
@@ -148,6 +158,7 @@ class Warehouse:
         return False
 
     def run_robot(self):
+        print_step = True
         for inst in self.instructions:
             if inst == '^':
                 next = (self.robot[0]-1, self.robot[1])
@@ -161,15 +172,17 @@ class Warehouse:
                
             cur = self.robot
             if self.map[next[0], next[1]] == '#':
-                print("instruction", inst)        
-                self.pretty_print()
+                if print_step:
+                    print("instruction", inst)        
+                    self.pretty_print()
                 continue
             if self.map[next[0], next[1]] == '.':
                 self.map[next[0], next[1]] = '@'
                 self.map[self.robot[0], self.robot[1]] = '.'
                 self.robot = next
-                print("instruction", inst)        
-                self.pretty_print()
+                if print_step:
+                    print("instruction", inst)        
+                    self.pretty_print()
                 continue
 
             #it's a box
@@ -182,9 +195,14 @@ class Warehouse:
                 if self.map[next[0],next[1]] == '[':
                     box_l = next
                     box_r = (next[0], next[1]+1)
-                else:
+                elif self.map[next[0],next[1]] == ']':
                     box_l = (next[0], next[1]-1)
                     box_r = next
+                else:
+                    print(inst)
+                    self.pretty_print()
+                    import sys
+                    sys.exit()
 
                 if self.box_moved(box_l, box_r, dir):
                     self.map[next[0], next[1]] = '@'
@@ -202,14 +220,18 @@ class Warehouse:
                         self.map[cur[0], cur[1]] = '.'
                         self.robot = next
 
-            print("instruction", inst)        
-            self.pretty_print()
+            if print_step:
+                print("instruction", inst)        
+                self.pretty_print()
 
-    def score_map(self):
+            # unique, counts = np.unique(self.map, return_counts=True)
+            # print(dict(zip(unique, counts)))
+
+    def score_map(self, target='O'):
         score = 0 
         with np.nditer(self.map, flags=['multi_index']) as it:
             for x in it:
-                if x == 'O':        
+                if x == target:        
                     score += it.multi_index[0] * 100 + it.multi_index[1]
         return score
 
@@ -217,8 +239,11 @@ def main():
     # src = 'small_sample.txt'
     # src = 'sample.txt'
     # src = 'test.txt'
-    # src = 'input.txt'
-    src = 'center.txt'
+    src = 'input.txt'
+    # src = 'center.txt'
+    src = 'p2sample.txt'
+    # src = 'p2score.txt'
+    src = 'test-p2-1.txt'
     instructions = []
     with open(src, 'r') as f:
         lines = [line.strip() for line in f.readlines()]
@@ -230,7 +255,6 @@ def main():
             food_str.append(line)
         elif line:
             inst_str.append(line)
-
     food = np.array([list(line) for line in food_str])
     if inst_str:
         for line in inst_str:
@@ -240,9 +264,11 @@ def main():
     wh.load(food, instructions)
     if instructions:
         wh.run_robot()
-    print(f'shape {wh.map.shape}')
-    print(wh.map)
-    print(wh.instructions)
-    print(wh.score_map())
+    # print(f'shape {wh.map.shape}')
+    # print(wh.map)
+    # print(wh.instructions)
+    print(wh.score_map(target='['))
 
 main()
+
+# 1541299 too low
