@@ -124,7 +124,28 @@ class Warehouse:
         
         return False
 
+    def box_slid(self, box, dir):
+        box_slide = False 
+        box_next = (box[0]+(2*dir[0]), box[1]+(2*dir[1]))
+        box_next_val = self.map[box_next[0], box_next[1]]
 
+        if box_next_val == '.':
+            box_slide = True
+        elif box_next_val == '#':
+            box_slide = False
+        elif box_next_val in ['[', ']']:
+            box_slide = self.box_slid(box_next, dir)
+
+        # < 
+        # .[] 
+        # [].
+        if box_slide:
+            self.map[box_next[0], box_next[1]] = self.map[box[0]+dir[0],box[1]+dir[1]]
+            self.map[box[0]+dir[0], box[1]+dir[1]] = self.map[box[0],box[1]]
+            self.map[box[0], box[1]] = '.'
+            return True
+
+        return False
 
     def run_robot(self):
         for inst in self.instructions:
@@ -169,49 +190,17 @@ class Warehouse:
                     self.map[next[0], next[1]] = '@'
                     self.map[cur[0], cur[1]] = '.'
                     self.robot = next
+            elif inst == '>' or inst == '<':
+                if inst == '>':
+                    dir = (0,1)
+                else:
+                    dir = (0,-1)
 
-                # move the box above and its other half.
-
-
-                # can box-l and box-r move?
-                #     can box-l
-
-                # start box = box-l, box-
-
-                # box can move box-l, box-r
-                # if box-l can move and box-r can move 
-                    
-
-                # new_robot_offset, path = self.process_path(self.map[self.robot[0]::-1, self.robot[1]])
-                # new_robot_offset, path = self.shove(self.map[self.robot[0]::-1, self.robot[1]])
-                # for cell in path:
-                #     self.map[cur[0], cur[1]] = cell
-                #     cur = (cur[0]-1, cur[1])
-                # self.robot = (self.robot[0] - new_robot_offset, self.robot[1])
-            elif inst == '>':
-                # pushing into wide boxes >[].
-
-
-                # new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]:])
-            #     new_robot_offset, path = self.shove(self.map[self.robot[0], self.robot[1]:])
-            #     for cell in path:
-            #         self.map[cur[0], cur[1]] = cell
-            #         cur = (cur[0], cur[1]+1)
-            #     self.robot = (self.robot[0], self.robot[1] + new_robot_offset)
-            # elif inst == 'v':
-                # new_robot_offset, path = self.process_path(self.map[self.robot[0]:, self.robot[1]])
-                new_robot_offset, path = self.shove(self.map[self.robot[0]:, self.robot[1]])
-                for cell in path:
-                    self.map[cur[0], cur[1]] = cell
-                    cur = (cur[0]+1, cur[1])
-                self.robot = (self.robot[0] + new_robot_offset, self.robot[1])
-            elif inst == '<':
-                # new_robot_offset, path = self.process_path(self.map[self.robot[0], self.robot[1]::-1])
-                new_robot_offset, path = self.shove(self.map[self.robot[0], self.robot[1]::-1])
-                for cell in path:
-                    self.map[cur[0], cur[1]] = cell
-                    cur = (cur[0], cur[1]-1)
-                self.robot = (self.robot[0], self.robot[1] - new_robot_offset)
+                if self.map[next[0], next[1]] in ['[',']']:
+                    if self.box_slid(next, dir):
+                        self.map[next[0], next[1]] = '@'
+                        self.map[cur[0], cur[1]] = '.'
+                        self.robot = next
 
             print("instruction", inst)        
             self.pretty_print()
