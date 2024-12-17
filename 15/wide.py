@@ -74,13 +74,16 @@ class Warehouse:
         return new_robot_offset, new_path
     
 
-    def box_moved(self, bl, br, dir):
+    def box_moved(self, frame, bl, br, dir):
         bl_moved = False
         br_moved = False
         bl_next = (bl[0]+dir[0], bl[1]+dir[1])
         br_next = (br[0]+dir[0], br[1]+dir[1])
-        bl_next_val = self.map[bl_next[0], bl_next[1]]
-        br_next_val = self.map[br_next[0], br_next[1]]
+        bl_next_val = frame[bl_next[0], bl_next[1]]
+        br_next_val = frame[br_next[0], br_next[1]]
+        bl_next_val = frame[bl_next[0], bl_next[1]]
+        br_next_val = frame[br_next[0], br_next[1]]
+    
     
         if bl_next_val == '.':
             bl_moved = True
@@ -91,45 +94,27 @@ class Warehouse:
             br_moved = True
         if br_next_val == '#':
             br_moved = False
-        '''
-        instruction >
-        ####################
-        ##[]..[]......[][]##
-        ##[]...........[].##
-        ##............[][]##
-        ##..............[]##
-        ##..##[]..[][]....##
-        ##...[]..[][].....##
-        ##.....[][].@.[][]##
-        ##.......[]...[]..##
-        ####################
-        instruction ^
-        ####################
-        ##[]..[]......[][]##
-        ##[]...........[].##
-        ##............[][]##
-        ##........[]....[]##
-        ##..##[]....[]....##
-        ##...[]..[][].....##
-        ##.....[][].@.[][]##
-        ##.......[]...[]..##
-        ####################
-        '''
-
 
         if bl_next_val == '[' and br_next_val == ']':
-            bl_moved = br_moved = self.box_moved(bl_next, br_next, dir)
+            bl_moved = br_moved = self.box_moved(frame, bl_next, br_next, dir)
+        elif bl_next_val == ']' and br_next_val == '[':
+            bl_res = self.box_moved(frame, (bl_next[0], bl_next[1]-1), bl_next, dir)
+            br_res = self.box_moved(frame, br_next, (br_next[0], br_next[1]+1), dir)
+            if bl_res == False or br_res == False:
+                bl_moved = br_moved = False
+            else:
+                bl_moved = br_moved = True
         else:
             if bl_next_val == ']':
-                bl_moved = self.box_moved((bl_next[0], bl_next[1]-1), bl_next, dir)
+                bl_moved = self.box_moved(frame, (bl_next[0], bl_next[1]-1), bl_next, dir)
             if br_next_val == '[':
-                br_moved = self.box_moved(br_next, (br_next[0], br_next[1]+1), dir)
+                br_moved = self.box_moved(frame, br_next, (br_next[0], br_next[1]+1), dir)
         
         if br_moved and bl_moved:
-            self.map[bl_next[0], bl_next[1]] = self.map[bl[0], bl[1]]
-            self.map[br_next[0], br_next[1]] = self.map[br[0], br[1]]
-            self.map[bl[0], bl[1]] = '.'
-            self.map[br[0], br[1]] = '.'
+            frame[bl_next[0], bl_next[1]] = frame[bl[0], bl[1]]
+            frame[br_next[0], br_next[1]] = frame[br[0], br[1]]
+            frame[bl[0], bl[1]] = '.'
+            frame[br[0], br[1]] = '.'
             return True
         
         return False
@@ -174,7 +159,7 @@ class Warehouse:
             if self.map[next[0], next[1]] == '#':
                 if print_step:
                     print("instruction", inst)        
-                    self.pretty_print()
+                    # self.pretty_print()
                 continue
             if self.map[next[0], next[1]] == '.':
                 self.map[next[0], next[1]] = '@'
@@ -182,7 +167,7 @@ class Warehouse:
                 self.robot = next
                 if print_step:
                     print("instruction", inst)        
-                    self.pretty_print()
+                    # self.pretty_print()
                 continue
 
             #it's a box
@@ -204,9 +189,13 @@ class Warehouse:
                     import sys
                     sys.exit()
 
-                if self.box_moved(box_l, box_r, dir):
-                    self.map[next[0], next[1]] = '@'
-                    self.map[cur[0], cur[1]] = '.'
+                frame = copy.copy(self.map)
+                if self.box_moved(frame, box_l, box_r, dir):
+                    # self.map[next[0], next[1]] = '@'
+                    frame[next[0], next[1]] = '@'
+                    # self.map[cur[0], cur[1]] = '.'
+                    frame[cur[0], cur[1]] = '.'
+                    self.map = frame
                     self.robot = next
             elif inst == '>' or inst == '<':
                 if inst == '>':
@@ -239,11 +228,13 @@ def main():
     # src = 'small_sample.txt'
     # src = 'sample.txt'
     # src = 'test.txt'
-    src = 'input.txt'
+    src = 'input2.txt'
     # src = 'center.txt'
-    src = 'p2sample.txt'
+    # src = 'p2sample.txt'
     # src = 'p2score.txt'
-    src = 'test-p2-1.txt'
+    # src = 'test-p2-1.txt'
+    # src = 'split_test2.txt'
+    # src = 'split_testup.txt'
     instructions = []
     with open(src, 'r') as f:
         lines = [line.strip() for line in f.readlines()]
@@ -265,10 +256,14 @@ def main():
     if instructions:
         wh.run_robot()
     # print(f'shape {wh.map.shape}')
-    # print(wh.map)
+    wh.pretty_print()
     # print(wh.instructions)
     print(wh.score_map(target='['))
 
 main()
 
 # 1541299 too low
+# 1564765 too hi
+# 1548869 no
+# 1553459 no
+# 1548815
