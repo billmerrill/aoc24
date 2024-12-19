@@ -1,0 +1,8 @@
+2,4 combo->regA % 8 -> regB
+1,5 regB^5 -> regB
+7,5 regA//(2**regB) -> regC
+1,6 regB^6 -> regB
+0,3 regA // (2**3) -> regA
+4,0 regB ^ regC -> regB
+5,5 output(regB % 8) 
+3,0 while regA > 0, goto 1

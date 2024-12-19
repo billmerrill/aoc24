@@ -127,23 +127,22 @@ inputs = [
     {'state':(24847151,0,0), 'program': '2,4,1,5,7,5,1,6,0,3,4,0,5,5,3,0'},
     {'state':(117440,0,0), 'program': '0,3,5,4,3,0'},
     ]
-# cart = 7
-# c = Compy(state=inputs[cart]['state'], 
-#           program=list(map(int, inputs[cart]['program'].split(','))))
-# # c.run()
-# print('Compy State')
-# print(c)
+cart = 7
+input = inputs[cart]
 
-c = Compy(state=(0,0,0), program=list(map(int,'2,4,1,5,7,5,1,6,0,3,4,0,5,5,3,0'.split(','))))
-test_A = 0
-while True:
-    c.run()
-    str_output = ','.join(list(map(str, c.output)))
-    # print(test_A, str_output)
-    if test_A % 10000 == 0:
-        print(test_A)
-    if str_output == '2,4,1,5,7,5,1,6,0,3,4,0,5,5,3,0':
-        print(f'The answer is {test_A}')
-        break
-    test_A += 1
-    c.reset(test_A)
+int_program = list(map(int,input['program'].split(',')))
+search = [(len(int_program), 0)]    
+answers = []
+while search:
+    pos, reg_a = search.pop(0)
+    for i in range(8):
+        new_reg_a = reg_a*8+i
+        c = Compy(state=(new_reg_a, 0, 0), program=int_program)
+        c.run()
+        if c.output == c.program[pos-1:]:
+            search.append((pos-1, new_reg_a))
+            if len(c.output) == len(int_program):
+                answers.append(new_reg_a)
+
+answers.sort()
+print(answers[0]) 
